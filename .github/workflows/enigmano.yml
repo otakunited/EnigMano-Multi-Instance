@@ -27,12 +27,11 @@ jobs:
     - name: ⚔️ Start Chrome Remote Desktop Host
       shell: pwsh
       run: |
-        $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
-        if (-not (Test-Path $exe)) {
-          Write-Error "❌ CRD executable not found at $exe"
-          exit 1
-        }
-        & $exe --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME --pin=123456
+        & "$Env:ProgramFiles(x86)\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe" `
+          --code="4/0AVMBsJgLhAn6PWFzw7RVkRzu0G9NJq3HHCvQzGZM-Aa45edTbDJn9VDTo0WYKomZfXxSYA" `
+          --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
+          --name=$Env:COMPUTERNAME `
+          --pin=123456
 
     - name: 🕒 Keep Alive 6h Timer
       shell: pwsh
