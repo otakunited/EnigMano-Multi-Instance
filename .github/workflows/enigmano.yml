@@ -2,40 +2,12 @@ name: "⚡ EnigMano Win11 + Chrome Remote Desktop"
 
 on:
   workflow_dispatch:
-    inputs:
-      INSTANCE:
-        description: "Instance number to deploy (e.g., 1, 2, 3...)"
-        required: true
-        default: "1"
 
 jobs:
   deploy-enigmano:
-    name: "🚀 Deploy EnigMano Instance ${{ github.event.inputs.INSTANCE }}"
     runs-on: windows-latest
 
-    env:
-      INSTANCE_ID: ${{ github.event.inputs.INSTANCE }}
-      DEPLOYMENT_ID: ${{ github.run_id }}
-
     steps:
-      - name: 📌 Deployment Parameters
-        shell: pwsh
-        run: |
-          $prevInstance = [int]$env:INSTANCE_ID - 1
-          Write-Host "==============================================="
-          Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
-          Write-Host "🔢 Previous Instance     : $prevInstance"
-          Write-Host "🆔 Deployment ID         : $env:DEPLOYMENT_ID"
-          Write-Host "==============================================="
-
-      - name: 🌐 Install Chrome Remote Desktop
-        shell: pwsh
-        run: |
-          $crdInstaller = "$env:TEMP\crdhost.msi"
-          Invoke-WebRequest "https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb" -OutFile $crdInstaller
-          Write-Host "Installing Chrome Remote Desktop..."
-          Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /qn" -Wait
-
       - name: 🌐 Install Google Chrome
         shell: pwsh
         run: |
@@ -43,24 +15,32 @@ jobs:
           Invoke-WebRequest "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $chromeInstaller
           Start-Process $chromeInstaller -ArgumentList "/silent /install" -Wait
 
+      - name: 🌐 Install Chrome Remote Desktop Host
+        shell: pwsh
+        run: |
+          $crdInstaller = "$env:TEMP\crdhost.msi"
+          Invoke-WebRequest "https://dl.google.com/dl/chrome-remote-desktop/chrome_remote_desktop.msi" -OutFile $crdInstaller
+          Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /qn" -Wait
+
       - name: ⚙️ Configure Chrome Remote Desktop
         shell: pwsh
         run: |
-          $pin = "123456"
-          $code = "YOUR_AUTH_CODE_HERE"   # ⚡ remplace ça par ton vrai code CRD
-
           $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
           if (-not (Test-Path $exe)) {
             Write-Error "❌ CRD executable not found at $exe"
             exit 1
           }
 
-          & "$exe" --code=$code --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="EnigMano-Win11" --pin=$pin
-          Write-Host "✅ Chrome Remote Desktop host started with PIN: $pin"
+          & "$exe" `
+            --code="4/0AVMBsJhIqShthYalxeb90iucACB0oQxiWKlYOh5aYgT1701tiAriiPjIbwH1l5Y9l8e-wA" `
+            --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
+            --name="EnigMano-Win11" `
+            --pin=123456
 
-      - name: 💠 Final Status
-        if: always()
+          Write-Host "✅ CRD host registered. PIN: 123456"
+
+      - name: ♾️ Keep session alive
         shell: pwsh
         run: |
-          Write-Host "✅ EnigMano Instance $env:INSTANCE_ID ready for Chrome Remote Desktop."
-          Write-Host "🔋 Powered by: SHAHZAIB-YT"
+          Write-Host "Keeping instance alive for 6 hours..."
+          Start-Sleep -Seconds 21600
