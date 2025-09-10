@@ -6,98 +6,49 @@ on:
 jobs:
   deploy-enigmano:
     runs-on: windows-latest
-
     steps:
-      - name: 📌 Deployment Parameters
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
+    - name: 📌 Deployment Parameters
+      shell: pwsh
+      run: |
+        Write-Host "==============================================="
+        Write-Host "🔹 EnigMano Instance : 1"
+        Write-Host "📦 Repository : $env:GITHUB_REPOSITORY"
+        Write-Host "==============================================="
 
-          function Timestamp { (Get-Date).ToString("yyyy-MM-dd HH:mm:ss") }
-          function Log($msg) { Write-Host "[ENIGMANO $(Timestamp)] $msg" }
+    - name: 📥 Install Chrome Remote Desktop
+      shell: pwsh
+      run: |
+        $crdInstaller = "$env:TEMP\crdhost.msi"
+        Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile $crdInstaller
+        Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /quiet /norestart" -Wait
+        Remove-Item $crdInstaller -Force
+        Write-Host "✅ Chrome Remote Desktop installed."
 
-          $now = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-          Write-Host @"
-----------------------------------------------------
-         ENIGMANO INSTANCE BOOTING
-----------------------------------------------------
-  STATUS    : Initializing CRD deployment
-  TIME      : $now
-  ARCHITECT : BILAL-ZN
-----------------------------------------------------
-"@
+    - name: ⚔️ Start Chrome Remote Desktop Host
+      shell: pwsh
+      run: |
+        $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
+        if (-not (Test-Path $exe)) {
+          Write-Error "❌ CRD executable not found at $exe"
+          exit 1
+        }
+        & $exe --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME --pin=123456
 
-      - name: 📥 Install Chrome Remote Desktop
-        shell: pwsh
-        run: |
-          $crdInstaller = "$env:TEMP\crdhost.msi"
-          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile $crdInstaller
-          Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /quiet /norestart" -Wait
-          Remove-Item $crdInstaller -Force
-          Write-Host "✅ Chrome Remote Desktop installed."
-
-      - name: ⚔️ Start Chrome Remote Desktop Host
-        shell: pwsh
-        run: |
-          $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
-
-          if (-not (Test-Path $exe)) {
-            Write-Error "❌ CRD executable not found at $exe"
-            exit 1
+    - name: 🕒 Keep Alive 6h Timer
+      shell: pwsh
+      run: |
+        $total = 21600
+        for ($s = $total; $s -ge 0; $s--) {
+          if ($s % 60 -eq 0) {  # Affiche chaque minute
+            Write-Host "$s secondes restantes..."
           }
+          Start-Sleep -Seconds 1
+        }
+        Write-Host "⏰ 6 heures écoulées ! Fin du timer."
 
-          & $exe `
-            --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" `
-            --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
-            --name=$Env:COMPUTERNAME `
-            --pin=123456
-
-      - name: 🌀 Keep Alive Session (Timer Controlled)
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = "Stop"
-
-          function Timestamp { (Get-Date).ToString("yyyy-MM-dd HH:mm:ss") }
-          function Log($msg) { Write-Host "[KEEP-ALIVE $(Timestamp)] $msg" }
-
-          # === TIMER SETTINGS ===
-          $totalMinutes    = 340   # durée max de vie ~5h40
-          $handoffMinutes  = 330   # déclenchement éventuel avant fin
-          $shutdownMinutes = 335   # limite d’arrêt
-          $startTime       = Get-Date
-          $endTime         = $startTime.AddMinutes($totalMinutes)
-          $handoffTime     = $startTime.AddMinutes($handoffMinutes)
-          $shutdownTime    = $startTime.AddMinutes($shutdownMinutes)
-
-          Log "Keep-Alive monitoring initiated. Uptime target: $totalMinutes minutes."
-
-          # === HANDOFF MONITOR LOOP ===
-          while ((Get-Date) -lt $handoffTime) {
-              $now       = Get-Date
-              $elapsed   = [math]::Round(($now - $startTime).TotalMinutes, 1)
-              $remaining = [math]::Round(($endTime - $now).TotalMinutes, 1)
-              Log "Instance uptime: $elapsed min | Remaining window: $remaining min"
-
-              $waitMinutes = Get-Random -Minimum 10 -Maximum 20
-              Start-Sleep -Seconds ($waitMinutes * 60)
-          }
-
-          # === SHUTDOWN PHASE LOOP ===
-          while ((Get-Date) -lt $shutdownTime) {
-              $now       = Get-Date
-              $elapsed   = [math]::Round(($now - $startTime).TotalMinutes, 1)
-              $remaining = [math]::Round(($endTime - $now).TotalMinutes, 1)
-              Log "Final phase :: $elapsed min elapsed | $remaining min left before shutdown."
-
-              $waitMinutes = Get-Random -Minimum 5 -Maximum 10
-              Start-Sleep -Seconds ($waitMinutes * 60)
-          }
-
-          Log "⏹️ Termination sequence initiated. EnigMano CRD instance ending."
-
-      - name: 💠 Final Status
-        if: always()
-        shell: pwsh
-        run: |
-          Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
-          Write-Host "🔋 Powered by: CRD + GitHub Actions"
+    - name: 💠 Final Status
+      if: always()
+      shell: pwsh
+      run: |
+        Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
+        Write-Host "🔋 Powered by: CRD + GitHub Actions"
