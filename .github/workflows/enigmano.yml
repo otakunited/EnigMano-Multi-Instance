@@ -1,4 +1,4 @@
-name: "⚡ EnigMano Win11 + CRD Deployment"
+name: "⚡ EnigMano Win11 + CRD 6H Session"
 
 on:
   workflow_dispatch:
@@ -6,16 +6,9 @@ on:
 jobs:
   deploy-enigmano:
     runs-on: windows-latest
+    timeout-minutes: 360  # 6 heures max
 
     steps:
-      - name: 📌 Deployment Parameters
-        shell: pwsh
-        run: |
-          Write-Host "==============================================="
-          Write-Host "🔹 EnigMano Instance : 1"
-          Write-Host "📦 Repository        : $env:GITHUB_REPOSITORY"
-          Write-Host "==============================================="
-
       - name: 📥 Install Chrome Remote Desktop
         shell: pwsh
         run: |
@@ -36,14 +29,14 @@ jobs:
           }
 
           & $exe `
-            --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" `
+            --code="⚡TON_CODE_ICI⚡" `
             --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
             --name=$Env:COMPUTERNAME `
             --pin=123456
 
-      - name: 💠 Final Status
-        if: always()
+      - name: ⏳ Keep Alive 6H
         shell: pwsh
         run: |
-          Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
-          Write-Host "🔋 Powered by: CRD + GitHub Actions"
+          Write-Host "🔄 EnigMano KeepAlive started (6h max)..."
+          Start-Sleep -Seconds 21600
+          Write-Host "✅ Session finished after 6 hours."
