@@ -41,22 +41,21 @@ jobs:
             --name=$Env:COMPUTERNAME `
             --pin=123456
 
-    - name: 🕒 Keep Alive 6h Timer
-      shell: pwsh
-      run: |
-        $total = 21600
-        for ($s = $total; $s -ge 0; $s--) {
-          if ($s % 60 -eq 0) {  # Affiche chaque minute
-            Write-Host "$s secondes restantes..."
+      - name: 🕒 Keep Alive 6h Timer
+        shell: pwsh
+        run: |
+          $total = 21600
+          for ($s = $total; $s -ge 0; $s--) {
+            if ($s % 60 -eq 0) {  # Affiche chaque minute
+              Write-Host "$s secondes restantes..."
+            }
+            Start-Sleep -Seconds 1
           }
-          Start-Sleep -Seconds 1
-        }
-        Write-Host "⏰ 6 heures écoulées ! Fin du timer."
+          Write-Host "⏰ 6 heures écoulées ! Fin du timer."
 
-    - name: 💠 Final Status
-      if: always()
-      shell: pwsh
-      run: |
-        Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
-        Write-Host "🔋 Powered by: CRD + GitHub Actions"no Instance deployed with Chrome Remote Desktop."
+      - name: 💠 Final Status
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
           Write-Host "🔋 Powered by: CRD + GitHub Actions"
