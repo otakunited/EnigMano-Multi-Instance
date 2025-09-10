@@ -1,53 +1,44 @@
-name: "⚡ EnigMano Win11 + Chrome Remote Desktop"
+name: "⚡ EnigMano Win11 + CRD Deployment"
 
 on:
   workflow_dispatch:
-    inputs:
-      INSTANCE:
-        description: "Instance number to deploy (e.g., 1, 2, 3...)"
-        required: true
-        default: "1"
 
 jobs:
-  deploy-enigmano-crd:
+  deploy-enigmano:
     runs-on: windows-latest
-
-    env:
-      INSTANCE_ID: ${{ github.event.inputs.INSTANCE }}
-      CRD_CODE: "⚠️ REMPLACE_ICI_TON_CODE" # <-- mets ton code Google CRD ici
-      CRD_PIN: "123456"
 
     steps:
       - name: 📌 Deployment Parameters
+        shell: pwsh
         run: |
           Write-Host "==============================================="
-          Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
-          Write-Host "📦 GitHub Repository     : $env:GITHUB_REPOSITORY"
-          Write-Host "🆔 Deployment ID         : $env:GITHUB_RUN_ID"
+          Write-Host "🔹 EnigMano Instance : 1"
+          Write-Host "📦 Repository        : $env:GITHUB_REPOSITORY"
           Write-Host "==============================================="
-        shell: pwsh
 
-      - name: 📥 Installer Chrome Remote Desktop Host
+      - name: 📥 Install Chrome Remote Desktop
+        shell: pwsh
         run: |
           $crdInstaller = "$env:TEMP\crdhost.msi"
-          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile $crdInstaller
+          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chrome-remote-desktop_current.msi" -OutFile $crdInstaller
           Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /quiet /norestart" -Wait
-        shell: pwsh
+          Remove-Item $crdInstaller -Force
+          Write-Host "✅ Chrome Remote Desktop installed."
 
-      - name: 🚀 Lancer Chrome Remote Desktop
+      - name: ⚔️ Start Chrome Remote Desktop Host
+        shell: pwsh
         run: |
           $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
-          if (!(Test-Path $exe)) {
-            Write-Error "❌ CRD executable introuvable : $exe"
-            exit 1
-          }
-          & $exe --code=$env:CRD_CODE --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name=$Env:COMPUTERNAME --pin=$env:CRD_PIN
-        shell: pwsh
+
+          & $exe `
+            --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" `
+            --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
+            --name=$Env:COMPUTERNAME `
+            --pin=123456
 
       - name: 💠 Final Status
         if: always()
-        run: |
-          Write-Host "✅ EnigMano Instance $env:INSTANCE_ID déployée avec CRD."
-          Write-Host "🔑 PIN: $env:CRD_PIN"
-          Write-Host "🚦 Connecte-toi via https://remotedesktop.google.com/access"
         shell: pwsh
+        run: |
+          Write-Host "✅ EnigMano Instance deployed with Chrome Remote Desktop."
+          Write-Host "🔋 Powered by: CRD + GitHub Actions"
