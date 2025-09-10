@@ -1,4 +1,4 @@
-name: "⚡ EnigMano Instance Deployment"
+name: "⚡ EnigMano Win11 + Chrome Remote Desktop"
 
 on:
   workflow_dispatch:
@@ -15,10 +15,6 @@ jobs:
 
     env:
       INSTANCE_ID: ${{ github.event.inputs.INSTANCE }}
-      SECRET_SHAHZAIB: ${{ secrets.SECRET_SHAHZAIB }}
-      NGROK_SHAHZAIB: ${{ secrets.NGROK_SHAHZAIB }}
-      REPO: ${{ github.repository }}
-      WORKFLOW_FILE: "enigmano.yml"
       DEPLOYMENT_ID: ${{ github.run_id }}
 
     steps:
@@ -29,46 +25,42 @@ jobs:
           Write-Host "==============================================="
           Write-Host "🔹 EnigMano Instance     : $env:INSTANCE_ID"
           Write-Host "🔢 Previous Instance     : $prevInstance"
-          Write-Host "📦 GitHub Repository     : $env:REPO"
-          Write-Host "🔁 Deployment Workflow   : $env:WORKFLOW_FILE"
           Write-Host "🆔 Deployment ID         : $env:DEPLOYMENT_ID"
           Write-Host "==============================================="
 
-      - name: 🔐 Validate Secrets
+      - name: 🌐 Install Chrome Remote Desktop
         shell: pwsh
         run: |
-          if (-not $env:SECRET_SHAHZAIB) {
-            Write-Error "❌ Missing GitHub Secret: SECRET_SHAHZAIB"
-            exit 1
-          }
-          if (-not $env:NGROK_SHAHZAIB) {
-            Write-Error "❌ Missing Ngrok Auth Token: NGROK_SHAHZAIB"
-            exit 1
-          }
-          Write-Host "✅ All required secrets validated successfully"
+          $crdInstaller = "$env:TEMP\crdhost.msi"
+          Invoke-WebRequest "https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb" -OutFile $crdInstaller
+          Write-Host "Installing Chrome Remote Desktop..."
+          Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /qn" -Wait
 
-      - name: 📥 Download EnigMano-instance.ps1
+      - name: 🌐 Install Google Chrome
         shell: pwsh
         run: |
-          $url = "https://gitlab.com/Shahzaib-YT/enigmano-multi-instance/-/raw/main/EnigMano-instance.ps1"
-          Write-Host "🌐 Downloading EnigMano-instance.ps1..."
-          Invoke-WebRequest -Uri $url -OutFile "EnigMano-instance.ps1" -UseBasicParsing
-          if (!(Test-Path "./EnigMano-instance.ps1")) {
-            Write-Error "❌ Failed to download EnigMano-instance.ps1"
+          $chromeInstaller = "$env:TEMP\chrome_installer.exe"
+          Invoke-WebRequest "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $chromeInstaller
+          Start-Process $chromeInstaller -ArgumentList "/silent /install" -Wait
+
+      - name: ⚙️ Configure Chrome Remote Desktop
+        shell: pwsh
+        run: |
+          $pin = "123456"
+          $code = "YOUR_AUTH_CODE_HERE"   # ⚡ remplace ça par ton vrai code CRD
+
+          $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "❌ CRD executable not found at $exe"
             exit 1
           }
-          Write-Host "✅ EnigMano-instance.ps1 downloaded successfully"
 
-      - name: ⚔️ Execute EnigMano Instance Script
-        shell: pwsh
-        run: |
-          Write-Host "🚦 Initiating EnigMano-instance.ps1"
-          powershell.exe -ExecutionPolicy Bypass -File ".\EnigMano-instance.ps1"
+          & "$exe" --code=$code --redirect-url="https://remotedesktop.google.com/_/oauthredirect" --name="EnigMano-Win11" --pin=$pin
+          Write-Host "✅ Chrome Remote Desktop host started with PIN: $pin"
 
       - name: 💠 Final Status
         if: always()
         shell: pwsh
         run: |
-          Write-Host "✅ EnigMano Instance $env:INSTANCE_ID completed execution."
+          Write-Host "✅ EnigMano Instance $env:INSTANCE_ID ready for Chrome Remote Desktop."
           Write-Host "🔋 Powered by: SHAHZAIB-YT"
-          Write-Host "🏁 EnigMano deployment executed with tactical precision."
