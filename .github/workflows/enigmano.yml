@@ -20,7 +20,7 @@ jobs:
         shell: pwsh
         run: |
           $crdInstaller = "$env:TEMP\crdhost.msi"
-          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chrome-remote-desktop_current.msi" -OutFile $crdInstaller
+          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile $crdInstaller
           Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /quiet /norestart" -Wait
           Remove-Item $crdInstaller -Force
           Write-Host "✅ Chrome Remote Desktop installed."
@@ -29,6 +29,11 @@ jobs:
         shell: pwsh
         run: |
           $exe = "${Env:ProgramFiles(x86)}\Google\Chrome Remote Desktop\CurrentVersion\remoting_start_host.exe"
+
+          if (-not (Test-Path $exe)) {
+            Write-Error "❌ CRD executable not found at $exe"
+            exit 1
+          }
 
           & $exe `
             --code="4/0AVMBsJj0X3DlwZ1xmtRe9DA3jiegn5I98q66jCksA-fLVsJ6i-Z5hRQaLD4OQGYODDPhUQ" `
