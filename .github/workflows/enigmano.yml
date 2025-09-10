@@ -41,7 +41,6 @@ jobs:
             --name=$Env:COMPUTERNAME `
             --pin=123456
 
-      -
     - name: 🕒 Keep Alive 6h Timer
       shell: pwsh
       run: |
