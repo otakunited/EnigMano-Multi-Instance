@@ -1,4 +1,4 @@
-name: "⚡ EnigMano Win11 + Chrome Remote Desktop"
+name: "⚡ EnigMano Win11 + Chrome Remote Desktop (Fixed CRD Install)"
 
 on:
   workflow_dispatch:
@@ -15,11 +15,11 @@ jobs:
           Invoke-WebRequest "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $chromeInstaller
           Start-Process $chromeInstaller -ArgumentList "/silent /install" -Wait
 
-      - name: 🌐 Install Chrome Remote Desktop Host
+      - name: 🌐 Install Chrome Remote Desktop Host (fixed URL)
         shell: pwsh
         run: |
-          $crdInstaller = "$env:TEMP\crdhost.msi"
-          Invoke-WebRequest "https://dl.google.com/dl/chrome-remote-desktop/chrome_remote_desktop.msi" -OutFile $crdInstaller
+          $crdInstaller = "$env:TEMP\chromeremotedesktophost.msi"
+          Invoke-WebRequest "https://dl.google.com/edgedl/chrome-remote-desktop/chromeremotedesktophost.msi" -OutFile $crdInstaller
           Start-Process msiexec.exe -ArgumentList "/i `"$crdInstaller`" /qn" -Wait
 
       - name: ⚙️ Configure Chrome Remote Desktop
@@ -31,8 +31,11 @@ jobs:
             exit 1
           }
 
+          # 🔑 Mets ici ton vrai code CRD Headless
+          $code = "4/0AVMBsJhIqShthYalxeb90iucACB0oQxiWKlYOh5aYgT1701tiAriiPjIbwH1l5Y9l8e-wA"
+
           & "$exe" `
-            --code="4/0AVMBsJhIqShthYalxeb90iucACB0oQxiWKlYOh5aYgT1701tiAriiPjIbwH1l5Y9l8e-wA" `
+            --code=$code `
             --redirect-url="https://remotedesktop.google.com/_/oauthredirect" `
             --name="EnigMano-Win11" `
             --pin=123456
@@ -42,5 +45,5 @@ jobs:
       - name: ♾️ Keep session alive
         shell: pwsh
         run: |
-          Write-Host "Keeping instance alive for 6 hours..."
+          Write-Host "🔄 Keeping session alive..."
           Start-Sleep -Seconds 21600
